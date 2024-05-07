@@ -5,8 +5,9 @@ import time
 import pygame as pg
 
 
-WIDTH = 1600  # ゲームウィンドウの幅
-HEIGHT = 900  # ゲームウィンドウの高さ
+
+WIDTH = 1200  # ゲームウィンドウの幅
+HEIGHT = 600  # ゲームウィンドウの高さ
 NUM_OF_BOMBS = 5  # 爆弾の数
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -115,6 +116,16 @@ class Bomb:
         self.rct.move_ip(self.vx, self.vy)
         screen.blit(self.img, self.rct)
 
+class Explosion:
+    def __init__(self,bomb:Bomb):
+        imgex=pg.transform.rotozoom(pg.image.load("fig/explosion.gif"), 0, 2.0)
+        self.image={pg.transform.rotozoom(imgex, 45, 1.0),pg.transform.rotozoom(imgex, 90, 1.0),pg.transform.rotozoom(imgex, -45, 1.0),}
+        self.image.rct.center=bomb.rct.center
+        self.life=50
+    def update(self, screen:pg.surface):
+        life-=1
+        if (life>=0):
+            screen.blit(self.image(random[1, 3]))
 
 class Beam:
     def __init__(self, bird: Bird):
@@ -147,6 +158,7 @@ def main():
     beam = None
     clock = pg.time.Clock()
     tmr = 0
+    explosion=[]
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -163,7 +175,7 @@ def main():
                 txt = fonto.render("GameOver", True, (255, 0, 0))
                 screen.blit(txt, [WIDTH/2-150, HEIGHT/2])
                 pg.display.update()
-                time.sleep(5)
+                time.sleep(1)
                 return
         # if not (beam is None or bomb is None):
         for i, bomb in enumerate(bombs):
@@ -171,9 +183,11 @@ def main():
                 if beam.rct.colliderect(bomb.rct):  # ビームと爆弾が衝突したら
                     beam = None
                     bombs[i] = None
+                    explosion.append(Explosion(bomb, 100))
                     bird.change_img(6, screen)
                     pg.display.update()
         bombs = [bomb for bomb in bombs if bomb is not None]
+        explosion = [exp for exp in explosion if exp.life > 0]
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
@@ -181,6 +195,8 @@ def main():
             bomb.update(screen)
         if beam is not None:
             beam.update(screen)
+        for i in explosion:
+            explosion.update(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
